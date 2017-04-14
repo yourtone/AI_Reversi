@@ -3,7 +3,7 @@ from board import Board, move_string, print_moves
 
 player = {-1 : "Black", 1 : "White"}
 
-def game(white_engine, black_engine, game_time=60.0, verbose=False):
+def game(black_engine, white_engine, game_time=60.0, verbose=False):
     """ Run a single game. Raise RuntimeError in the event of time expiration.
     Raise LookupError in the case of a bad move. The tournament engine must
     handle these exceptions. """
@@ -37,8 +37,8 @@ def game(white_engine, black_engine, game_time=60.0, verbose=False):
                 moves.append(move)
 
                 if verbose:
-                    print "--\n"
-                    print "Round " + str(move_num + 1) + ": " + player[color] + " plays in " + move_string(move) + '\n'
+                    print(("--\n\nRound {}: {} plays in {}\n"
+                        ).format(str(move_num + 1), player[color], move_string(move)))
                     board.display(totaltime)
 
         if not moves:
@@ -94,99 +94,84 @@ def signal_handler(signal, frame):
     print '\n\n- You quit the game!'
     sys.exit()
 
-result = (0, 0, 0)
-
 TRIAL = 2
-def main(white_engine, black_engine, game_time, verbose):
+def main(player_engine_1, player_engine_2, game_time, verbose):
     try:
-        wwins = ties = bwins = 0
+        wins_1 = wins_2 = ties = 0
 
-        player[-1] = player[-1][:-8]
-        player[1] = player[1][:-8]
+        #player[-1] = player[-1][:-8]
+        #player[1] = player[1][:-8]
 
         for i in range(int(TRIAL/2)):
-            print "NEW GAME"
-            print "White:", player[1]
-            print "Black:", player[-1]
-            board = game(white_engine, black_engine, game_time, verbose)
+            print(("NEW GAME\nBlack: {}\nWhite: {}").format(player[-1], player[1]))
+            board = game(player_engine_2, player_engine_1, game_time, verbose)
             stats = winner(board)
             bscore = str(stats[1])
             wscore = str(stats[2])
             if stats[0] == -1:
-                bwins += 1
-                print "- " + player[-1] + " wins the game! (" + bscore + "-" + wscore + ")"
+                wins_2 += 1
+                print(("- {} wins the game! ({}-{})").format(player[-1], bscore, wscore))
             elif stats[0] == 1:
-                wwins += 1
-                print "- " + player[1] + " wins the game! (" + wscore + "-" + bscore + ")"
+                wins_1 += 1
+                print(("- {} wins the game! ({}-{})").format(player[1], wscore, bscore))
             else:
                 ties += 1
-                print "- " + player[-1] + " and " + player[1] + " are tied! (" + bscore + "-" + wscore + ")"
-            print '{:<10}{:d}'.format(player[1], wwins)
-            print '{:<10}{:d}'.format(player[-1], bwins)
-            print '{:<10}{:d}'.format("Ties", ties)
+                print(("- {} and {} are tied! ({}-{})").format(player[-1], player[1], bscore, wscore))
+            print(('{:<10}{:d}\n{:<10}{:d}\n{:<10}{:d}'
+                ).format(player[-1], wins_2, player[1], wins_1, "Ties", ties))
 
+        player[-1], player[1] = player[1], player[-1]
         for i in range(int(TRIAL/2), TRIAL):
-            print "NEW GAME"
-            print "White:", player[-1]
-            print "Black:", player[1]
-            board = game(black_engine, white_engine, game_time, verbose)
+            print(("NEW GAME\nBlack: {}\nWhite: {}").format(player[-1], player[1]))
+            board = game(player_engine_1, player_engine_2, game_time, verbose)
             stats = winner(board)
             bscore = str(stats[1])
             wscore = str(stats[2])
             if stats[0] == -1:
-                wwins += 1
-                print "- " + player[1] + " wins the game! (" + bscore + "-" + wscore + ")"
+                wins_1 += 1
+                print(("- {} wins the game! ({}-{})").format(player[-1], bscore, wscore))
             elif stats[0] == 1:
-                bwins += 1
-                print "- " + player[-1] + " wins the game! (" + wscore + "-" + bscore + ")"
+                wins_2 += 1
+                print(("- {} wins the game! ({}-{})").format(player[1], wscore, bscore))
             else:
                 ties += 1
-                print "- " + player[1] + " and " + player[-1] + " are tied! (" + bscore + "-" + wscore + ")"
-            print '{:<10}{:d}'.format(player[1], wwins)
-            print '{:<10}{:d}'.format(player[-1], bwins)
-            print '{:<10}{:d}'.format("Ties", ties)
+                print(("- {} and {} are tied! ({}-{})").format(player[-1], player[1], bscore, wscore))
+            print(('{:<10}{:d}\n{:<10}{:d}\n{:<10}{:d}'
+                ).format(player[1], wins_2, player[-1], wins_1, "Ties", ties))
 
-        print "========== FINAL REPORT =========="
-        print '{:<10}{:d}'.format(player[1], wwins)
-        print '{:<10}{:d}'.format(player[-1], bwins)
-        print '{:<10}{:d}'.format("Ties", ties)
+        player[-1], player[1] = player[1], player[-1]
+        print(('\n========== FINAL REPORT ==========\n{:<10}{:d}\n{:<10}{:d}\n{:<10}{:d}'
+            ).format(player[-1], wins_2, player[1], wins_1, "Ties", ties))
 
         return None
 
     except RuntimeError, e:
+        print(("\n- {} ran out of time!\n{} wins the game! (64-0)"
+            ).format(player[e[0]], player[e[0]*-1]))
         if e[0] == -1:
-            print "\n- " + player[-1] + " ran out of time!"
-            print player[1] + " wins the game! (64-0)"
             return (1, 0, 64)
         else:
-            print "\n- " + player[1] + " ran out of time!"
-            print player[-1] + " wins the game! (64-0)"
             return (-1, 64, 0)
 
     except LookupError, e:
+        print(("\n- {} made an illegal move!\n{} wins the game! (64-0)"
+            ).format(player[e[0]], player[e[0]*-1]))
         if e[0] == -1:
-            print "\n- " + player[-1] + " made an illegal move!"
-            print player[1] + " wins the game! (64-0)"
             return (1, 0, 64)
         else:
-            print "\n- " + player[1] + " made an illegal move!"
-            print player[-1] + " wins the game! (64-0)"
             return (-1, 64, 0)
 
     except SystemError, e:
+        print(("\n- {} ended prematurely because of an error!\n{} wins the game! (64-0)"
+            ).format(player[e[0]], player[e[0]*-1]))
         if e[0] == -1:
-            print "\n- " + player[-1] + " ended prematurely because of an error!"
-            print player[1] + " wins the game! (64-0)"
             return (1, 0, 64)
         else:
-            print "\n- " + player[1] + " ended prematurely because of an error!"
-            print player[-1] + " wins the game! (64-0)"
             return (-1, 64, 0)
 
 
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal_handler)
-
     # Automatically generate help and usage messages.
     # Issue errors when users gives the program invalid arguments.
     parser = argparse.ArgumentParser(description="Play the Othello game with different engines.")
@@ -198,27 +183,26 @@ if __name__ == '__main__':
     parser.add_argument("-v", action="store_true", help="display the board on each turn")
     args = parser.parse_args();
 
-    black_engine = args.black_engine[0]
-    white_engine = args.white_engine[0]
-    # Retrieve player names
-    player[-1] = black_engine + " (black)"
-    player[1] = white_engine + " (white)"
+    engine_name_1 = args.white_engine[0]
+    engine_name_2 = args.black_engine[0]
+    player[1] = engine_name_1
+    player[-1] = engine_name_2
 
     try:
-        engines_b = __import__('engines.' + black_engine)
-        engines_w = __import__('engines.' + white_engine)
-        engine_b = engines_b.__dict__[black_engine].__dict__['engine']()
-        engine_w = engines_w.__dict__[white_engine].__dict__['engine']()
+        engines_1 = __import__('engines.' + engine_name_1)
+        engines_2 = __import__('engines.' + engine_name_2)
+        engine_1 = engines_1.__dict__[engine_name_1].__dict__['engine']()
+        engine_2 = engines_2.__dict__[engine_name_2].__dict__['engine']()
 
-        if (black_engine != "greedy" and black_engine != "human" and black_engine != "random"):
-            engine_b.alpha_beta = not args.mB
-        if (white_engine != "greedy" and white_engine != "human" and white_engine != "random"):
-            engine_w.alpha_beta = not args.mW
+        if (engine_name_1 != "greedy" and engine_name_1 != "human" and engine_name_1 != "random"):
+            engine_1.alpha_beta = not args.mW
+        if (engine_name_2 != "greedy" and engine_name_2 != "human" and engine_name_2 != "random"):
+            engine_2.alpha_beta = not args.mB
 
-        v = (args.v or white_engine == "human" or black_engine == "human")
-        print player[-1] + " vs. " + player[1] + "\n"
-        main(engine_w, engine_b, game_time=args.t, verbose=v)
+        #print(("{} vs. {}\n").format(player[-1], player[1]))
+        v = (args.v or engine_name_1 == "human" or engine_name_2 == "human")
+        main(engine_1, engine_2, game_time=args.t, verbose=v)
 
     except ImportError, e:
-        print 'Unknown engine -- ' + e[0].split()[-1]
+        print(('Unknown engine -- {}').format(e[0].split()[-1]))
         sys.exit()
