@@ -48,6 +48,7 @@ def game(black_engine, white_engine, game_time=60.0, verbose=False):
     print "FINAL BOARD\n--\n"
     board.display(totaltime)
 
+    board.totaltime = totaltime
     return board
 
 def get_move(board, engine, color, move_num, time, **kwargs):
@@ -87,6 +88,11 @@ def winner(board):
         #    white_count += (64 - black_count - white_count)
         return (1, black_count, white_count)
     else:
+        totaltime = board.totaltime
+        if totaltime[-1] > totaltime[1]:
+            return (-1, black_count, white_count)
+        elif totaltime[-1] < totaltime[1]:
+            return (1, black_count, white_count)
         return (0, black_count, white_count)
 
 def signal_handler(signal, frame):
@@ -98,9 +104,7 @@ TRIAL = 2
 def main(player_engine_1, player_engine_2, game_time, verbose):
     try:
         wins_1 = wins_2 = ties = 0
-
-        #player[-1] = player[-1][:-8]
-        #player[1] = player[1][:-8]
+        timeleft = {1: 0, 2: 0}
 
         for i in range(int(TRIAL/2)):
             print(("NEW GAME\nBlack: {}\nWhite: {}").format(player[-1], player[1]))
@@ -108,6 +112,8 @@ def main(player_engine_1, player_engine_2, game_time, verbose):
             stats = winner(board)
             bscore = str(stats[1])
             wscore = str(stats[2])
+            timeleft[1] = timeleft[1] + board.totaltime[1]
+            timeleft[2] = timeleft[2] + board.totaltime[-1]
             if stats[0] == -1:
                 wins_2 += 1
                 print(("- {} wins the game! ({}-{})").format(player[-1], bscore, wscore))
@@ -127,6 +133,8 @@ def main(player_engine_1, player_engine_2, game_time, verbose):
             stats = winner(board)
             bscore = str(stats[1])
             wscore = str(stats[2])
+            timeleft[1] = timeleft[1] + board.totaltime[-1]
+            timeleft[2] = timeleft[2] + board.totaltime[1]
             if stats[0] == -1:
                 wins_1 += 1
                 print(("- {} wins the game! ({}-{})").format(player[-1], bscore, wscore))
@@ -142,6 +150,14 @@ def main(player_engine_1, player_engine_2, game_time, verbose):
         player[-1], player[1] = player[1], player[-1]
         print(('\n========== FINAL REPORT ==========\n{:<10}{:d}\n{:<10}{:d}\n{:<10}{:d}'
             ).format(player[-1], wins_2, player[1], wins_1, "Ties", ties))
+        if wins_1 == wins_2:
+            print('Tie, compare game time:')
+            if timeleft[1] > timeleft[2]:
+                print(('{} uses less time, win finally.').format(player[1]))
+            elif timeleft[1] < timeleft[2]:
+                print(('{} uses less time, win finally.').format(player[-1]))
+            else:
+                print('Tie even compare time!')
 
         return None
 
