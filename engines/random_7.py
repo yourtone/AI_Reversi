@@ -454,8 +454,6 @@ class RandomEngine(Engine):
         #x = pos[0]
         #pos[0] = pos[1]
         #pos[1] = x
-        print BestChild(root, 0).data
-        print color
 
 
 

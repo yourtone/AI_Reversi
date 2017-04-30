@@ -22,19 +22,19 @@ class Board():
     def __init__(self):
         """ Set up initial board configuration. """
         # Create the empty board array
-        self.__pieces = [None]*8
+        self.pieces = [None]*8
         for i in range(8):
-            self.__pieces[i] = [0]*8
+            self.pieces[i] = [0]*8
 
         # Set up the initial 4 pieces
-        self.__pieces[3][4] = 1
-        self.__pieces[4][3] = 1
-        self.__pieces[3][3] = -1;
-        self.__pieces[4][4] = -1;
+        self.pieces[3][4] = 1
+        self.pieces[4][3] = 1
+        self.pieces[3][3] = -1;
+        self.pieces[4][4] = -1;
 
     # Add [][] indexer syntax to the Board
     def __getitem__(self, index):
-        return self.__pieces[index]
+        return self.pieces[index]
 
     def display(self, time):
         """" Display the board and the statistics of the ongoing game. """

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from engines import Engine
 from cmath import sqrt, log
 import timeit, sys

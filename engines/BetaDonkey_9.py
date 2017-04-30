@@ -17,8 +17,9 @@ class BetaDonkeyEngine(Engine):
         self.BIT = [1 << n for n in range(64)]
         self.visited_states = {}
         self.stats = {}
-        self.calculation_time = 58
+        self.calculation_time = 57
         self.stats = {}                         #This value is used to note the states have been expanded
+        self.C = 1.414
         self.FULL_MASK = 0xFFFFFFFFFFFFFFFF
         self.LSB_HASH = 0x07EDD5E59A4E28C2      #These are used for evaluation
         self.LSB_TABLE = [0] * 64
@@ -103,8 +104,8 @@ class BetaDonkeyEngine(Engine):
             #print "oneloop:\t",
             #print end-begin_oneloop
         actions_states = []
-        print '*********************////*/*/******************************search times:',
-        print i
+        #print '*********************////*/*/******************************search times:',
+        #print i
         maxnum = 0
         bestmov = self.legalmoves[0]        #from the set of legal moves, we choose the best one
         if color > 0:
@@ -122,7 +123,7 @@ class BetaDonkeyEngine(Engine):
                     if self.stats[(color, tmpW, tmpB)].visits == 0:
                         self.print_bitboard(tmpW)
                         self.print_bitboard(tmpB)
-                        print "aaaa"
+                        #print "aaaa"
                     num = self.stats[(color, tmpW,tmpB)].value / self.stats[(color, tmpW, tmpB)].visits
                     if num >= maxnum:
                         maxnum = num
@@ -144,12 +145,12 @@ class BetaDonkeyEngine(Engine):
                     if self.stats[(color, tmpW, tmpB)].visits == 0:
                         self.print_bitboard(tmpW)
                         self.print_bitboard(tmpB)
-                        print "aaaa"
+                        #print "aaaa"
                     num = self.stats[(color, tmpW, tmpB)].value / self.stats[(color, tmpW, tmpB)].visits
-                    print "visitimes:",
-                    print self.stats[(color, tmpW, tmpB)].visits,
-                    print "\tvalue",
-                    print self.stats[(color, tmpW, tmpB)].value
+                    #print "visitimes:",
+                    #print self.stats[(color, tmpW, tmpB)].visits,
+                    #print "\tvalue",
+                    #print self.stats[(color, tmpW, tmpB)].value
                     if num >= maxnum:
                         maxnum = num
                         bestmov = p

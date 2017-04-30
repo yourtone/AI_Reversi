@@ -1,4 +1,5 @@
-import random
+from __future__ import absolute_import
+import random as rdm
 import time
 import math
 import copy
@@ -13,7 +14,7 @@ from multiprocessing import Process, Pool, Manager
 class MCTS_engine(Engine):
     def __init__(self):
         self.tree = tree()
-        self.sim_time = 57  # change this attribute according to game time limit
+        self.sim_time = 50  # change this attribute according to game time limit
         # self.sim_round = 1  # change this attribute according to game time limit
         self.cpu_num = 1  # the number of cpu used, useless for now
         self.num_per_process = 1
@@ -23,7 +24,7 @@ class MCTS_engine(Engine):
                  time_remaining=None, time_opponent=None):
         self.color = color
         my_board = MyBoard()
-        my_board._MyBoard__pieces = board._Board__pieces
+        my_board._MyBoard__pieces = board.pieces
         state = (my_board, color)  # wrap the board and color into a tuple
         # cProfile.runctx('move = self.MCS(state=copy.deepcopy(state))', globals(), locals())  # used for analysising the time used
         move = self.MCS(state=copy.deepcopy(state))  # start MC searching
@@ -70,7 +71,7 @@ class MCTS_engine(Engine):
             # self.BP(base_node=selected_node, gain=result)
             ##########multi core with pool###########
 
-        print sim_num, "simulations performed."
+        #print sim_num, "simulations performed."
         # print selected_node.moveToSelf, "selected"
         self.display_wins_and_plays(root)  # useless for now
 
@@ -100,7 +101,7 @@ class MCTS_engine(Engine):
                 elif wins == best_wins:
                     best_actions.append(child.moveToSelf)
 
-        return random.choice(best_actions)
+        return rdm.choice(best_actions)
 
     def treePolicy(self, root):
         legal_moves = root.legal_moves
@@ -120,7 +121,7 @@ class MCTS_engine(Engine):
                 if move not in root.triedMoves
             ]
             assert len(untried) > 0
-            move = random.choice(untried)  # exploration
+            move = rdm.choice(untried)  # exploration
             # temp_board = copy.deepcopy(root.state[0])
             # temp_board.execute_move(move=move, color=(root.state[1]))
             temp_board = MCTS_engine.apply_move(copy.deepcopy(root.state), move)
@@ -202,15 +203,15 @@ class MCTS_engine(Engine):
                 #         if move not in [(1, 6), (6, 1), (1, 1), (6, 6)]:
                 #             temp_other.append(move)
                 if len(temp_corner) != 0:
-                    selected_move = random.choice(temp_corner)
+                    selected_move = rdm.choice(temp_corner)
                 else:
-                    selected_move = random.choice(moves)  # TODO: improve
+                    selected_move = rdm.choice(moves)  # TODO: improve
                 # elif len(temp_12) != 0:
-                #     selected_move = random.choice(temp_12)
+                #     selected_move = rdm.choice(temp_12)
                 # elif len(temp_other) != 0:
-                #     selected_move = random.choice(temp_other)
+                #     selected_move = rdm.choice(temp_other)
                 # else:
-                #     selected_move = random.choice(moves)
+                #     selected_move = rdm.choice(moves)
 
 
                 # state[0].execute_move(selected_move, state[1])

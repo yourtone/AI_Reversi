@@ -205,14 +205,13 @@ class TreeNode:
     def __init__(self):
         self.board = None
         self.color = None
-        self.father = None
         self.moves_to_run = None
-        self.children = None
-        self.prev_moves = None
-        self.terminal = None
-        self.reward = None
-        self.try_times = None
-        self.first_expand = None
+        self.children = []
+        self.prev_move = None
+        self.terminal = False
+        self.reward = 0.0
+        self.try_times = 0
+        self.father = None
 
 
 class TreeNodeFactory:
@@ -223,30 +222,22 @@ class TreeNodeFactory:
         node = TreeNode()
         node.board = board
         node.color = color
-        node.father = None
         node.moves_to_run = set(node.board.get_legal_moves(node.color))
-        node.first_expand = True
-        node.children = []
-        node.prev_moves = []
-        node.terminal = False
         if len(node.moves_to_run) == 0:
             moves = node.board.get_legal_moves(-node.color)
             if len(moves) == 0:
                 node.terminal = True
             else:
-                node.color = -node.color
-                node.prev_moves.append(None)
-                node.moves_to_run = moves
-        node.reward = 0.0
-        node.try_times = 0
+                node.moves_to_run.add(None)
         return node
 
     def gen_child_node(self, father, move):
         new_board = deepcopy(father.board)
-        new_board.execute_move(move, father.color)
+        if move is not None:
+            new_board.execute_move(move, father.color)
         child = self.gen_ordinary_node(new_board, -father.color)
+        child.prev_move = move
         child.father = father
-        child.prev_moves[:0] = [move]
         return child
 
 
@@ -261,20 +252,19 @@ class Sunday_8Engine(Engine):
                  time_remaining=None, time_opponent=None):
         if move_num < 8:
             return self.another_5.get_move(deepcopy(board), color, move_num, time_remaining, time_opponent)
+
         self.root = self.node_factory.gen_ordinary_node(board, color)
         start = timeit.default_timer()
-        # cnt = 0
-        while timeit.default_timer() - start < 59:
-            # cnt += 1
+
+        while timeit.default_timer() - start < 3:
             node = self.__tree_policy(self.root)
-            # for i in range(1):
-            winner, win_reward = self.__default_policy((node.board), node.color)
-            self.__back_up(node, winner, 1, -1, 0)
-        # print "try times: " + str(cnt)
-        if len(self.root.prev_moves) > 0:
-            return self.root.prev_moves[0]
+            winner = self.__default_policy(deepcopy(node.board), node.color)
+            self.__back_up(node, winner)
+
+        if self.root.terminal:
+            return None
         else:
-            return self.__best_child(self.root, 1.0).prev_moves[0]
+            return self.__best_child(self.root, 0.0).prev_move
 
     def __expand(self, node):
         next_move = node.moves_to_run.pop()
@@ -282,22 +272,17 @@ class Sunday_8Engine(Engine):
         return node.children[-1]
 
 
-    def __update(self, node, winner, win_reward, lose_reward, tie_reward):
+    def __update(self, node, winner):
         node.try_times += 1
-        if node.father is None:
-            pass
-        elif node.father.color == winner:
-            node.reward += win_reward
-        elif -node.father.color == winner:
-            node.reward += lose_reward
-        else:
-            node.reward += tie_reward
-        return
+        if -node.color == winner:
+            node.reward += 1
+        elif node.color == winner:
+            node.reward += -1
 
 
     def __evaluate(self, father, child, mix):
-        exploration = 1.0 * child.reward / child.try_times
-        exploitation = 1.0 * math.sqrt(2.0 * math.log(father.try_times) / child.try_times)
+        exploitation = 1.0 * child.reward / child.try_times
+        exploration = 1.0 * math.sqrt(2.0 * math.log(father.try_times) / child.try_times)
         value = exploration + mix * exploitation
         return value
 
@@ -335,16 +320,16 @@ class Sunday_8Engine(Engine):
             color = -color
         result = board.count(1) - board.count(-1)
         if result > 0:
-            return 1, result
+            return 1
         elif result < 0:
-            return -1, -result
+            return -1
         else:
-            return 0, 0
+            return 0
 
 
-    def __back_up(self, node, winner, win_reward, lose_reward, tie_reward):
+    def __back_up(self, node, winner):
         while node is not None:
-            self.__update(node, winner, win_reward, lose_reward, tie_reward)
+            self.__update(node, winner)
             node = node.father
 
 
