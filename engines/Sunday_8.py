@@ -256,7 +256,7 @@ class Sunday_8Engine(Engine):
         self.root = self.node_factory.gen_ordinary_node(board, color)
         start = timeit.default_timer()
 
-        while timeit.default_timer() - start < 3:
+        while timeit.default_timer() - start < 55:
             node = self.__tree_policy(self.root)
             winner = self.__default_policy(deepcopy(node.board), node.color)
             self.__back_up(node, winner)
